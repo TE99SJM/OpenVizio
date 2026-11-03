@@ -1,0 +1,1230 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family TV</title>
+
+<style>
+:root {
+  --bg: #101820;
+  --panel: #21313f;
+  --tile: #293b4b;
+  --focus: #ffca28;
+  --text: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 35px 45px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 48px;
+}
+
+h2 {
+  font-size: 29px;
+}
+
+button {
+  color: white;
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+}
+
+.action {
+  background: #344657;
+  border: 2px solid #71808c;
+  border-radius: 11px;
+  padding: 13px 18px;
+  font-size: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 19px;
+}
+
+.tile {
+  height: 170px;
+  background: var(--tile);
+  border: 3px solid #536574;
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.tile img {
+  max-width: 190px;
+  width: 100%;
+  height: 97px;
+  object-fit: contain;
+  border-radius: 9px;
+}
+
+.tile.special {
+  background: #36536c;
+  font-size: 28px;
+}
+
+.tile.allapps {
+  background: #455584;
+}
+
+button:focus,
+input:focus {
+  outline: 7px solid var(--focus);
+  outline-offset: 3px;
+  position: relative;
+  z-index: 2;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#editor {
+  background: var(--panel);
+  padding: 24px;
+  border-radius: 15px;
+}
+
+#editorList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.edit-row {
+  background: #304456;
+  padding: 12px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.edit-row strong {
+  flex: 1;
+  min-width: 125px;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.edit-row button {
+  background: #4b6277;
+  border: 1px solid #8294a5;
+  border-radius: 7px;
+  padding: 10px 12px;
+  font-size: 16px;
+}
+
+.edit-row .is-hidden {
+  background: #754448;
+}
+
+.edit-row .move-limit {
+  opacity: .45;
+}
+
+.edit-row input {
+  min-width: 140px;
+  max-width: 220px;
+  padding: 9px;
+  font-size: 17px;
+  color: #111;
+  background: white;
+  border-radius: 7px;
+}
+
+.section-title {
+  grid-column: 1 / -1;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 22px 0 8px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #62788b;
+}
+
+#search {
+  width: min(100%, 470px);
+  margin-bottom: 23px;
+  padding: 13px;
+  border-radius: 10px;
+  font-size: 23px;
+  background: white;
+  color: #111;
+}
+
+.hint {
+  color: #cad3dc;
+  font-size: 18px;
+}
+
+footer {
+  margin-top: 27px;
+  font-size: 18px;
+  color: #c2ccd5;
+  min-height: 26px;
+}
+
+@media (max-width: 850px) {
+  body {
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 34px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tile {
+    height: 145px;
+    font-size: 20px;
+  }
+
+  #editorList {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1 id="heading">Welcome Home</h1>
+
+  <div class="toolbar">
+    <button id="backButton" class="action hidden">
+      Back
+    </button>
+
+    <button id="editButton" class="action">
+      Edit Home
+    </button>
+  </div>
+</header>
+
+<input
+  id="search"
+  class="hidden"
+  type="search"
+  placeholder="Search All Apps"
+>
+
+<main id="grid" class="grid"></main>
+
+<section id="editor" class="hidden">
+  <h2>Customize Home</h2>
+
+  <p class="hint">
+    Visible apps appear first. Use OK repeatedly on
+    an Up or Down button to move an app several positions.
+    The selected button stays highlighted until you
+    navigate away.
+  </p>
+
+  <div id="editorList"></div>
+
+  <p>
+    <button id="restoreButton" class="action">
+      Restore Photo Apps
+    </button>
+
+    <button id="doneButton" class="action">
+      Done
+    </button>
+  </p>
+</section>
+
+<footer id="status" role="status" aria-live="polite">
+  Loading applications...
+</footer>
+
+<script>
+"use strict";
+
+// Preserve the layout from previous versions.
+const STORAGE_KEY = "family-tv-v4-layout";
+
+const PHOTO_APPS = [
+  ["Hulu"],
+  ["Plex"],
+  ["WatchFree+", "WatchFree Plus"],
+  ["Netflix"],
+  ["Prime Video"],
+  ["Apple TV+", "Apple TV"],
+  ["Disney+"],
+  ["Paramount+"],
+  ["ESPN+", "ESPN"],
+  ["HBO Max", "Max"],
+  ["FOX ONE", "FOX One"],
+  ["Peacock"],
+  ["Xumo Play", "XUMO"],
+  ["Pluto TV"],
+  ["STARZ"],
+  ["Sling TV"],
+  ["Crunchyroll"],
+  ["YouTube"],
+  ["YouTube TV"],
+  ["Tubi"],
+  ["WatchFree+ On Demand"]
+];
+
+const INPUTS = [
+  {
+    id: "input-live",
+    name: "Live TV",
+    kind: "input",
+    visible: true
+  },
+  {
+    id: "input-hdmi1",
+    name: "HDMI 1",
+    kind: "input",
+    visible: true
+  },
+  {
+    id: "input-hdmi2",
+    name: "HDMI 2",
+    kind: "input",
+    visible: true
+  },
+  {
+    id: "input-hdmi3",
+    name: "HDMI 3",
+    kind: "input",
+    visible: true
+  }
+];
+
+let tiles = [];
+let screen = "home";
+let editing = false;
+let query = "";
+let launching = false;
+
+const $ = id => document.getElementById(id);
+const grid = $("grid");
+const status = $("status");
+
+// -----------------------------------------------
+// Basic helpers
+// -----------------------------------------------
+
+function normalize(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function setStatus(message) {
+  status.textContent = message;
+}
+
+function sortVisibleFirst() {
+  tiles = [
+    ...tiles.filter(t => t.visible),
+    ...tiles.filter(t => !t.visible)
+  ];
+}
+
+function save() {
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(
+        tiles.map(t => ({
+          id: t.id,
+          name: t.name,
+          visible: t.visible
+        }))
+      )
+    );
+  } catch(error) {
+    setStatus("Unable to save layout.");
+  }
+}
+
+function readSaved() {
+  try {
+    const value = JSON.parse(
+      localStorage.getItem(STORAGE_KEY)
+    );
+
+    return Array.isArray(value) ? value : [];
+  } catch(error) {
+    return [];
+  }
+}
+
+function makeButton(label, callback, cls = "action") {
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.textContent = label;
+  button.className = cls;
+  button.addEventListener("click", callback);
+
+  return button;
+}
+
+function focusElement(element) {
+  if (!element) return;
+
+  element.focus();
+
+  element.scrollIntoView({
+    block: "nearest",
+    inline: "nearest"
+  });
+}
+
+function focusFirst() {
+  focusElement(grid.querySelector("button"));
+}
+
+function focusEditorFirst() {
+  focusElement(
+    $("editor").querySelector("button:not(:disabled)")
+  );
+}
+
+// -----------------------------------------------
+// Persistent editor focus
+// -----------------------------------------------
+
+// Every editing button is associated with
+// an application ID and an action name.
+// This lets us restore focus after rebuilding
+// the editor or rearranging an app.
+
+function setEditorButtonIdentity(button, tileId, action) {
+  button.dataset.tileId = tileId;
+  button.dataset.action = action;
+}
+
+function restoreEditorFocus(tileId, action) {
+  const buttons = [
+    ...document.querySelectorAll("#editorList button")
+  ];
+
+  const match = buttons.find(button =>
+    button.dataset.tileId === tileId &&
+    button.dataset.action === action
+  );
+
+  if (match) {
+    focusElement(match);
+  } else {
+    focusEditorFirst();
+  }
+}
+
+function refreshEditorKeepingFocus(tileId, action) {
+  render();
+  restoreEditorFocus(tileId, action);
+}
+
+// -----------------------------------------------
+// Launch Vizio applications
+// -----------------------------------------------
+
+async function openTile(tile) {
+
+  if (tile.kind === "input") {
+    setStatus(
+      tile.name + " — input switching not connected yet."
+    );
+    return;
+  }
+
+  if (launching) return;
+
+  launching = true;
+  setStatus("Opening " + tile.name + "...");
+
+  try {
+    const catalogId = String(tile.id).replace(
+      /^app-/,
+      ""
+    );
+
+    const response = await fetch("/api/launch", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        catalog_id: catalogId
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.detail || "Application launch rejected"
+      );
+    }
+
+    setStatus("Opening " + tile.name);
+
+  } catch(error) {
+    setStatus(
+      "Unable to open " +
+      tile.name +
+      ": " +
+      error.message
+    );
+  } finally {
+    launching = false;
+  }
+}
+
+// -----------------------------------------------
+// Render application tiles
+// -----------------------------------------------
+
+function renderTile(tile) {
+  const button = document.createElement("button");
+
+  button.type = "button";
+
+  button.className = "tile" +
+    (tile.kind === "input" ? " special" : "");
+
+  button.setAttribute("aria-label", tile.name);
+
+  if (
+    tile.icon &&
+    /^https:\/\//.test(tile.icon)
+  ) {
+    const img = document.createElement("img");
+
+    img.src = tile.icon;
+    img.alt = "";
+    img.loading = "lazy";
+
+    img.onerror = () => img.remove();
+
+    button.appendChild(img);
+  }
+
+  const text = document.createElement("span");
+  text.textContent = tile.name;
+
+  button.appendChild(text);
+
+  button.addEventListener(
+    "click",
+    () => openTile(tile)
+  );
+
+  return button;
+}
+
+// -----------------------------------------------
+// Main screen rendering
+// -----------------------------------------------
+
+function render() {
+  $("heading").textContent = editing
+    ? "Customize Home"
+    : screen === "all"
+      ? "All Apps"
+      : "Welcome Home";
+
+  $("editor").classList.toggle("hidden", !editing);
+
+  grid.classList.toggle("hidden", editing);
+
+  $("search").classList.toggle(
+    "hidden",
+    screen !== "all" || editing
+  );
+
+  $("backButton").classList.toggle(
+    "hidden",
+    screen === "home" && !editing
+  );
+
+  $("editButton").classList.toggle(
+    "hidden",
+    screen !== "home" || editing
+  );
+
+  grid.replaceChildren();
+
+  if (editing) {
+    renderEditor();
+    return;
+  }
+
+  const shown = screen === "home"
+    ? tiles.filter(t => t.visible)
+    : tiles.filter(t =>
+        t.kind === "app" &&
+        t.name.toLowerCase().includes(
+          query.toLowerCase()
+        )
+      );
+
+  shown.forEach(tile => {
+    grid.appendChild(renderTile(tile));
+  });
+
+  if (screen === "home") {
+    grid.appendChild(
+      makeButton(
+        "All Apps",
+        showAll,
+        "tile allapps"
+      )
+    );
+  }
+
+  setStatus(
+    screen === "all"
+      ? shown.length + " applications"
+      : shown.length + " home tiles"
+  );
+}
+
+// -----------------------------------------------
+// Customize Home editor
+// -----------------------------------------------
+
+function headingRow(text) {
+  const heading = document.createElement("div");
+
+  heading.className = "section-title";
+  heading.textContent = text;
+
+  return heading;
+}
+
+function renderEditor() {
+  sortVisibleFirst();
+
+  const list = $("editorList");
+  list.replaceChildren();
+
+  const visibleCount = tiles.filter(
+    t => t.visible
+  ).length;
+
+  const hiddenCount = tiles.length - visibleCount;
+
+  list.appendChild(
+    headingRow(
+      "Visible on Home (" + visibleCount + ")"
+    )
+  );
+
+  tiles.forEach((tile, index) => {
+
+    if (index === visibleCount) {
+      list.appendChild(
+        headingRow(
+          "Hidden Apps (" + hiddenCount + ")"
+        )
+      );
+    }
+
+    const row = document.createElement("div");
+    row.className = "edit-row";
+    row.dataset.tileId = tile.id;
+
+    const label = document.createElement("strong");
+    label.textContent = tile.name;
+
+    // Show / Hide
+    const toggle = makeButton(
+      tile.visible ? "Visible" : "Hidden",
+      () => {
+        tile.visible = !tile.visible;
+
+        sortVisibleFirst();
+        save();
+
+        refreshEditorKeepingFocus(
+          tile.id,
+          "visibility"
+        );
+      }
+    );
+
+    setEditorButtonIdentity(
+      toggle,
+      tile.id,
+      "visibility"
+    );
+
+    if (!tile.visible) {
+      toggle.classList.add("is-hidden");
+    }
+
+    // Rename without popups
+    const rename = makeButton("Rename", () => {
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = tile.name;
+      input.maxLength = 80;
+
+      label.replaceWith(input);
+
+      const finish = makeButton("Save", () => {
+        const value = input.value.trim();
+
+        if (value) {
+          tile.name = value;
+          save();
+        }
+
+        refreshEditorKeepingFocus(
+          tile.id,
+          "rename"
+        );
+      });
+
+      rename.replaceWith(finish);
+
+      focusElement(input);
+
+      input.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.stopPropagation();
+          finish.click();
+        }
+
+        if (event.key === "Escape") {
+          event.preventDefault();
+          event.stopPropagation();
+
+          refreshEditorKeepingFocus(
+            tile.id,
+            "rename"
+          );
+        }
+      });
+    });
+
+    setEditorButtonIdentity(
+      rename,
+      tile.id,
+      "rename"
+    );
+
+    // Move Up
+    const up = makeButton(
+      "↑",
+      () => moveTile(tile.id, -1, "up")
+    );
+
+    setEditorButtonIdentity(
+      up,
+      tile.id,
+      "up"
+    );
+
+    // Move Down
+    const down = makeButton(
+      "↓",
+      () => moveTile(tile.id, 1, "down")
+    );
+
+    setEditorButtonIdentity(
+      down,
+      tile.id,
+      "down"
+    );
+
+    const sectionStart = tile.visible
+      ? 0
+      : visibleCount;
+
+    const sectionEnd = tile.visible
+      ? visibleCount - 1
+      : tiles.length - 1;
+
+    // Don't disable these buttons.
+    // Keeping them focusable prevents the
+    // yellow selection from disappearing
+    // when an app reaches the top or bottom.
+    if (index <= sectionStart) {
+      up.classList.add("move-limit");
+      up.setAttribute("aria-label", "Already at top");
+    }
+
+    if (index >= sectionEnd) {
+      down.classList.add("move-limit");
+      down.setAttribute("aria-label", "Already at bottom");
+    }
+
+    row.append(
+      label,
+      toggle,
+      rename,
+      up,
+      down
+    );
+
+    list.appendChild(row);
+  });
+
+  if (hiddenCount === 0) {
+    list.appendChild(
+      headingRow("Hidden Apps (0)")
+    );
+  }
+}
+
+// -----------------------------------------------
+// Move apps — keep same button selected
+// -----------------------------------------------
+
+function moveTile(tileId, direction, action) {
+
+  // Find the app by its permanent identifier,
+  // not its previous position.
+  const index = tiles.findIndex(
+    tile => tile.id === tileId
+  );
+
+  if (index < 0) return;
+
+  const target = index + direction;
+
+  // If the app reaches the top or bottom,
+  // leave the button highlighted.
+  if (target < 0 || target >= tiles.length) {
+    restoreEditorFocus(tileId, action);
+    return;
+  }
+
+  // Visible and hidden apps cannot cross
+  // their section boundaries.
+  if (
+    tiles[index].visible !==
+    tiles[target].visible
+  ) {
+    restoreEditorFocus(tileId, action);
+    return;
+  }
+
+  // Swap applications.
+  [tiles[index], tiles[target]] = [
+    tiles[target], tiles[index]
+  ];
+
+  // Save updated order.
+  save();
+
+  // Rebuild editor and restore selection
+  // to the SAME app's SAME arrow button.
+  refreshEditorKeepingFocus(
+    tileId,
+    action
+  );
+}
+
+// -----------------------------------------------
+// Screen navigation
+// -----------------------------------------------
+
+function showAll() {
+  screen = "all";
+  editing = false;
+  query = "";
+
+  $("search").value = "";
+
+  render();
+  focusFirst();
+}
+
+function goBack() {
+  if (editing) {
+    editing = false;
+    screen = "home";
+  } else if (screen === "all") {
+    screen = "home";
+    query = "";
+  } else {
+    return;
+  }
+
+  render();
+  focusFirst();
+}
+
+// Spatial remote navigation.
+function navigate(direction) {
+  const selector = editing
+    ? "#editor button"
+    : "#grid button, header button:not(.hidden)";
+
+  const buttons = [
+    ...document.querySelectorAll(selector)
+  ].filter(button =>
+    !button.disabled &&
+    button.offsetWidth > 0
+  );
+
+  const current = document.activeElement;
+
+  if (!buttons.includes(current)) {
+    if (editing) {
+      focusEditorFirst();
+    } else {
+      focusFirst();
+    }
+    return;
+  }
+
+  const rect = current.getBoundingClientRect();
+
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+
+  let best = null;
+  let bestScore = Infinity;
+
+  for (const button of buttons) {
+    if (button === current) continue;
+
+    const b = button.getBoundingClientRect();
+
+    const dx = b.left + b.width / 2 - x;
+    const dy = b.top + b.height / 2 - y;
+
+    if (direction === "ArrowRight" && dx <= 5) continue;
+    if (direction === "ArrowLeft" && dx >= -5) continue;
+    if (direction === "ArrowDown" && dy <= 5) continue;
+    if (direction === "ArrowUp" && dy >= -5) continue;
+
+    const horizontal =
+      direction === "ArrowLeft" ||
+      direction === "ArrowRight";
+
+    const primary = horizontal
+      ? Math.abs(dx)
+      : Math.abs(dy);
+
+    const secondary = horizontal
+      ? Math.abs(dy)
+      : Math.abs(dx);
+
+    const score = primary + secondary * 2.5;
+
+    if (score < bestScore) {
+      bestScore = score;
+      best = button;
+    }
+  }
+
+  if (best) {
+    focusElement(best);
+  }
+}
+
+// -----------------------------------------------
+// Vizio remote compatibility
+// -----------------------------------------------
+
+function getRemoteKey(event) {
+  const code = event.keyCode || event.which || 0;
+  const key = event.key || "";
+
+  const directions = {
+    ArrowLeft: "ArrowLeft",
+    ArrowRight: "ArrowRight",
+    ArrowUp: "ArrowUp",
+    ArrowDown: "ArrowDown",
+    Left: "ArrowLeft",
+    Right: "ArrowRight",
+    Up: "ArrowUp",
+    Down: "ArrowDown"
+  };
+
+  const numeric = {
+    37: "ArrowLeft",
+    38: "ArrowUp",
+    39: "ArrowRight",
+    40: "ArrowDown"
+  };
+
+  return {
+    direction: directions[key] || numeric[code],
+
+    select: [
+      "Enter", "OK", "Select", "Accept"
+    ].includes(key) || [13, 23, 66].includes(code),
+
+    back: [
+      "Escape", "Backspace", "BrowserBack"
+    ].includes(key) || [8, 27, 461].includes(code)
+  };
+}
+
+// Prevent a single OK press from producing
+// two clicks through browser compatibility events.
+let lastSelectionKey = 0;
+
+document.addEventListener("keydown", event => {
+
+  const tag = document.activeElement?.tagName || "";
+
+  if (
+    ["INPUT", "TEXTAREA", "SELECT"].includes(tag)
+  ) {
+    if (
+      event.key === "Escape" &&
+      event.target === $("search")
+    ) {
+      event.preventDefault();
+      goBack();
+    }
+    return;
+  }
+
+  const remote = getRemoteKey(event);
+
+  if (remote.direction) {
+    event.preventDefault();
+
+    // Directional navigation naturally deselects
+    // the current Up or Down button.
+    navigate(remote.direction);
+    return;
+  }
+
+  if (remote.select) {
+    event.preventDefault();
+
+    if (event.repeat) return;
+
+    const now = Date.now();
+
+    // Ignore an immediately duplicated Select event,
+    // but allow normal repeated button presses.
+    if (now - lastSelectionKey < 120) return;
+
+    lastSelectionKey = now;
+
+    const selected = document.activeElement;
+
+    if (
+      selected &&
+      selected.tagName === "BUTTON"
+    ) {
+      selected.click();
+    }
+
+    return;
+  }
+
+  if (remote.back) {
+    event.preventDefault();
+    goBack();
+  }
+});
+
+// -----------------------------------------------
+// Toolbar controls
+// -----------------------------------------------
+
+$("editButton").onclick = () => {
+  editing = true;
+  render();
+  focusEditorFirst();
+};
+
+$("backButton").onclick = goBack;
+$("doneButton").onclick = goBack;
+
+$("search").addEventListener("input", event => {
+  query = event.target.value;
+  render();
+});
+
+// -----------------------------------------------
+// Restore photographed app selection
+// -----------------------------------------------
+
+$("restoreButton").onclick = () => {
+  const wanted = PHOTO_APPS.flat().map(normalize);
+
+  tiles.forEach(tile => {
+    tile.visible =
+      tile.kind === "input" ||
+      wanted.includes(normalize(tile.catalogName));
+  });
+
+  sortVisibleFirst();
+  save();
+  render();
+
+  focusElement($("restoreButton"));
+  setStatus("Photo app selection restored.");
+};
+
+// -----------------------------------------------
+// Load app catalog
+// -----------------------------------------------
+
+async function initialize() {
+  try {
+    const response = await fetch(
+      "/apps.json",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        "Catalog HTTP " + response.status
+      );
+    }
+
+    const catalog = await response.json();
+
+    if (!Array.isArray(catalog)) {
+      throw new Error("Invalid application catalog");
+    }
+
+    const saved = readSaved();
+
+    const savedMap = new Map(
+      saved.map(tile => [tile.id, tile])
+    );
+
+    const apps = catalog.map(app => {
+      const id = "app-" + app.id;
+      const old = savedMap.get(id);
+
+      const photographed = PHOTO_APPS.some(
+        group => group.some(
+          alias =>
+            normalize(alias) === normalize(app.name)
+        )
+      );
+
+      return {
+        id,
+        catalogName: app.name,
+        name: old?.name || app.name,
+        kind: "app",
+        visible: old ? old.visible : photographed,
+        icon: app.icon,
+        app_id: app.app_id,
+        name_space: app.name_space,
+        message: app.message || ""
+      };
+    });
+
+    const inputs = INPUTS.map(input => {
+      const old = savedMap.get(input.id);
+
+      return {
+        ...input,
+        name: old?.name || input.name,
+        visible: old ? old.visible : input.visible
+      };
+    });
+
+    const all = [...inputs, ...apps];
+
+    const lookup = new Map(
+      all.map(tile => [tile.id, tile])
+    );
+
+    // Restore saved order and names.
+    tiles = saved
+      .map(tile => lookup.get(tile.id))
+      .filter(Boolean);
+
+    // Include new catalog apps without losing
+    // existing visibility settings.
+    const knownIds = new Set(
+      tiles.map(tile => tile.id)
+    );
+
+    for (const tile of all) {
+      if (!knownIds.has(tile.id)) {
+        tiles.push(tile);
+        knownIds.add(tile.id);
+      }
+    }
+
+    sortVisibleFirst();
+    save();
+
+    render();
+    focusFirst();
+
+  } catch(error) {
+    tiles = INPUTS.map(tile => ({...tile}));
+
+    render();
+
+    setStatus(
+      "Application catalog unavailable: " +
+      error.message
+    );
+
+    focusFirst();
+  }
+}
+
+initialize();
+
+</script>
+</body>
+</html>

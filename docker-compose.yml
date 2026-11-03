@@ -1,0 +1,13 @@
+services:
+  family-tv:
+    build: .
+    container_name: family-tv
+    restart: unless-stopped
+    ports:
+      - "3040:3040"
+    environment:
+      VIZIO_HOST: "${VIZIO_HOST:?Set VIZIO_HOST in .env}"
+      VIZIO_TOKEN: "${VIZIO_TOKEN:?Set VIZIO_TOKEN in .env}"
+      FAMILY_TV_URL: "${FAMILY_TV_URL:?Set FAMILY_TV_URL in .env}"
+    volumes:
+      - ./web:/app/web:ro
