@@ -87,9 +87,10 @@ def identify_application(current):
         # Do not override an unrelated page.
         return "other"
 
-    # Vizio Home, representation 1.
+    # APP_ID 1 / namespace 5 is ambiguous and also used by YouTube.
+    # Do not redirect it: preserve native phone casting.
     if app_id == "1" and namespace == 5:
-        return "vizio_home"
+        return "other"
 
     # Vizio Home, representation 2.
     if app_id == "1" and namespace == 4:
